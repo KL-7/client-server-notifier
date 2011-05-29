@@ -1,0 +1,4 @@
+*.pro.user
+Makefile
+bin/
+tmp/
