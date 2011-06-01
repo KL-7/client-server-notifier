@@ -1,4 +1,5 @@
 #include <QTcpSocket>
+#include <QtDebug>
 
 #include "messagereceivingthread.h"
 
@@ -11,6 +12,7 @@ MessageReceivingThread::MessageReceivingThread(int socketDescriptor, int clientI
 void MessageReceivingThread::run() {
     tcpSocket = new QTcpSocket();
     connect(tcpSocket, SIGNAL(disconnected()), tcpSocket, SLOT(deleteLater()));
+    connect(tcpSocket, SIGNAL(disconnected()), this, SLOT(quit()));
 
     if (!tcpSocket->setSocketDescriptor(socketDescriptor)) {
         emit error(tcpSocket->errorString());
@@ -25,12 +27,13 @@ void MessageReceivingThread::run() {
 }
 
 void MessageReceivingThread::processSocketError(QAbstractSocket::SocketError) {
-    emit error(tcpSocket->errorString());
+    if (tcpSocket->error() != QAbstractSocket::RemoteHostClosedError) {
+        emit error(tcpSocket->errorString());
+    }
 }
 
 void MessageReceivingThread::readMessage() {
     QDataStream in(tcpSocket);
-    in.setVersion(QDataStream::Qt_4_6);
 
     if (messageSize == 0) {
         if (tcpSocket->bytesAvailable() < (int)sizeof(quint16)) {
@@ -45,17 +48,20 @@ void MessageReceivingThread::readMessage() {
     }
 
     int messageClientId;
-    in >> messageClientId;
+    QString message;
 
+    in >> messageClientId;
+    in >> message;
+
+    QDataStream out(tcpSocket);
     if (messageClientId != clientId) {
+        out << (quint8)0;
         emit error(tr("Wrong client id. Message ignored."));
     } else {
-        QString message;
-        in >> message;
-
+        out << (quint8)1;
         emit messageReceived(message);
     }
 
-    tcpSocket->disconnectFromHost();
+    tcpSocket->waitForDisconnected();
     exit();
 }

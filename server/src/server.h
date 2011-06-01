@@ -2,6 +2,7 @@
 #define SERVER_H
 
 #include "ui_server.h"
+#include "message.h"
 
 
 class Server : public QDialog, private Ui::Server {
@@ -13,7 +14,9 @@ public:
 private slots:
     void updateUi();
     void sendMessage();
-    void sendMessage(QString host, quint16 port, int clientId, QString message);
+    void sendMessage(Message message);
+    void onError(QString error);
+    void onMessageDelivered(int messageId);
 
 private:
     enum LogMessageType { SYS, MSG, ERR };

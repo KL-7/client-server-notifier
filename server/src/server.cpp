@@ -1,14 +1,17 @@
 #include <QtNetwork>
 #include <QMessageBox>
+#include <QtDebug>
 
 #include "server.h"
+#include "sendmessagethread.h"
 
-const int Server::CLIENT_WAIT_TIMEOUT = 5000;
+const int Server::CLIENT_WAIT_TIMEOUT = 2000;
 
 Server::Server(QWidget *parent) : QDialog(parent) {
     setupUi(this);
 
     clientIdLineEdit->setValidator(new QRegExpValidator(QRegExp(QString("\\d*")), this));
+    messageIdLineEdit->setValidator(new QRegExpValidator(QRegExp(QString("\\d*")), this));
 
     connect(clientHostLineEdit, SIGNAL(textChanged(QString)), this, SLOT(updateUi()));
     connect(clientIdLineEdit, SIGNAL(textChanged(QString)), this, SLOT(updateUi()));
@@ -22,36 +25,31 @@ void Server::updateUi() {
 }
 
 void Server::sendMessage() {
-    QString host = clientHostLineEdit->text();
-    quint16 port = clientPortSpinBox->value();
-    int clientId = clientIdLineEdit->text().toInt();
-    QString message = messageTextEdit->toPlainText();
+    Message message(
+        messageIdLineEdit->text().toInt(),
+        clientIdLineEdit->text().toInt(),
+        clientHostLineEdit->text(),
+        clientPortSpinBox->value(),
+        messageTextEdit->toPlainText()
+    );
 
-    sendMessage(host, port, clientId, message);
+    sendMessage(message);
 }
 
-void Server::sendMessage(QString host, quint16 port, int clientId, QString message) {
-    QTcpSocket* tcpSocket = new QTcpSocket(this);
-    tcpSocket->connectToHost(host, port, QIODevice::WriteOnly);
+void Server::sendMessage(Message message) {
+    SendMessageThread* thread = new SendMessageThread(message, CLIENT_WAIT_TIMEOUT, this);
+    connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+    connect(thread, SIGNAL(error(QString)), this, SLOT(onError(QString)));
+    connect(thread, SIGNAL(messageDelivered(int)), this, SLOT(onMessageDelivered(int)));
+    thread->start();
+}
 
-    connect(tcpSocket, SIGNAL(disconnected()), tcpSocket, SLOT(deleteLater()));
+void Server::onError(QString error) {
+    log(error, ERR);
+}
 
-    if (tcpSocket->waitForConnected(CLIENT_WAIT_TIMEOUT)) {
-        QByteArray block;
-        QDataStream out(&block, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_6);
-
-        out << (quint16)0;
-        out << clientId;
-        out << message;
-        out.device()->seek(0);
-        out << (quint16)(block.size() - sizeof(quint16));
-
-        tcpSocket->write(block);
-        tcpSocket->disconnectFromHost();
-    } else {
-        log(tr("Failed to connect to client in %1 sec").arg(CLIENT_WAIT_TIMEOUT / 1000), ERR);
-    }
+void Server::onMessageDelivered(int messageId) {
+    log(tr("Message %1 successfully delivered").arg(messageId));
 }
 
 void Server::log(QString message, LogMessageType type) {

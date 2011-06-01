@@ -16,10 +16,14 @@ RCC_DIR = tmp
 
 SOURCES += \
     src/main.cpp\
-    src/server.cpp
+    src/server.cpp \
+    src/sendmessagethread.cpp \
+    src/message.cpp
 
 HEADERS += \
-    src/server.h
+    src/server.h \
+    src/sendmessagethread.h \
+    src/message.h
 
 FORMS += \
     src/server.ui
