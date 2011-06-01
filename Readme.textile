@@ -1,0 +1,1 @@
+Schema: CREATE TABLE messages(id INTEGER PRIMARY KEY AUTOINCREMENT, client_id INT, host VARCHAR(50), port INT, body TEXT, updated_at TEXT);

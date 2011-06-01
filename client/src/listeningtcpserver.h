@@ -12,6 +12,7 @@ signals:
 
 public:
     ListeningTcpServer(int clientId, QObject* parent = 0);
+    void setClientId(int clientId) { this->clientId = clientId; }
 
 protected:
     void incomingConnection(int socketDescriptor);

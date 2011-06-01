@@ -51,6 +51,7 @@ void Client::startSocketListening() {
         if (isListening()) {
             listeningServer->close();
         }
+        listeningServer->setClientId(clientId());
     }
 
     if (!listeningServer->listen(host(), port())) {

@@ -4,17 +4,37 @@
 #include <QString>
 
 
+class QSqlRecord;
+class QSqlQuery;
+
 class Message {
 
 public:
-    Message(int id, int clientId, QString host, quint16 port, QString body);
+    Message(int clientId, QString host, quint16 port, QString body, int id = -1);
     Message(const Message& other);
+    Message(QSqlRecord record);
+
+    static Message* byId(int id);
+    static QList<Message> oldest(int limit = 10);
+    static QString lastError();
+    static int count();
+
+    bool touch();
+    bool save();
+    bool destroy();
 
     int id;
     int clientId;
     QString host;
     quint16 port;
     QString body;
+
+private:
+    static const QString TABLE_NAME;
+
+    static void saveLastError(QSqlQuery query);
+
+    static QString lastErrorText;
 
 };
 

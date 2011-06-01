@@ -6,7 +6,7 @@
 
 QT += core gui network
 
-TARGET = bin/client
+TARGET = ../bin/client
 TEMPLATE = app
 
 OBJECTS_DIR = tmp

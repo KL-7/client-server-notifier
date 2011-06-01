@@ -4,9 +4,9 @@
 #
 #-------------------------------------------------
 
-QT += core gui network
+QT += core gui network sql
 
-TARGET = bin/server
+TARGET = ../bin/server
 TEMPLATE = app
 
 OBJECTS_DIR = tmp
@@ -18,12 +18,15 @@ SOURCES += \
     src/main.cpp\
     src/server.cpp \
     src/sendmessagethread.cpp \
-    src/message.cpp
+    src/message.cpp \
+    src/addmessagedialog.cpp
 
 HEADERS += \
     src/server.h \
     src/sendmessagethread.h \
-    src/message.h
+    src/message.h \
+    src/addmessagedialog.h
 
 FORMS += \
-    src/server.ui
+    src/server.ui \
+    src/addmessagedialog.ui

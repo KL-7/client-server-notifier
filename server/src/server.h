@@ -5,6 +5,9 @@
 #include "message.h"
 
 
+class QSqlTableModel;
+class AddMessageDialog;
+
 class Server : public QDialog, private Ui::Server {
     Q_OBJECT
 
@@ -12,19 +15,31 @@ public:
     explicit Server(QWidget *parent = 0);
 
 private slots:
+    void initUi();
+    void initDB();
     void updateUi();
-    void sendMessage();
-    void sendMessage(Message message);
+    void showAddMessageDialog();
+    void addMessage(Message message);
     void onError(QString error);
     void onMessageDelivered(int messageId);
+    void deliverMessagesBunch();
+    void toggleDelivery();
 
 private:
     enum LogMessageType { SYS, MSG, ERR };
 
     static const int CLIENT_WAIT_TIMEOUT;
+    static const int MESSAGES_DELIVERY_BUNCH_SIZE;
+    static const int MESSAGES_DELIVERY_INTERVAL;
+    static const QString DATABASE_NAME;
 
+    QTimer* deliveryTimer;
+    QSqlTableModel* model;
+    AddMessageDialog* addMessageDialog;
+
+    void sendMessage(Message message);
     QString logMessageTypeToQString(LogMessageType logMessageType);
-    void log(QString message, LogMessageType type = MSG);
+    void log(QString message, LogMessageType type = SYS);
 
 };
 
