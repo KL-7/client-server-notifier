@@ -1,7 +1,9 @@
 #include <QtNetwork>
+#include <QMessageBox>
 
 #include "server.h"
 
+const int Server::CLIENT_WAIT_TIMEOUT = 10;
 
 Server::Server(QWidget *parent) : QDialog(parent) {
     setupUi(this);
@@ -29,21 +31,26 @@ void Server::sendMessage() {
     sendMessage(host, port, clientId, message);
 }
 
-void Server::sendMessage(QString host, quint16 port, int/* clientId*/, QString message) {
+void Server::sendMessage(QString host, quint16 port, int clientId, QString message) {
     QTcpSocket* tcpSocket = new QTcpSocket(this);
-    tcpSocket->connectToHost(host, port);
+    tcpSocket->connectToHost(host, port, QIODevice::WriteOnly);
 
     connect(tcpSocket, SIGNAL(disconnected()), tcpSocket, SLOT(deleteLater()));
 
-    QByteArray block;
-    QDataStream out(&block, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_4_6);
+    if (tcpSocket->waitForConnected(CLIENT_WAIT_TIMEOUT)) {
+        QByteArray block;
+        QDataStream out(&block, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_6);
 
-    out << (quint16)0;
-    out << message;
-    out.device()->seek(0);
-    out << (quint16)(block.size() - sizeof(quint16));
+        out << (quint16)0;
+        out << clientId;
+        out << message;
+        out.device()->seek(0);
+        out << (quint16)(block.size() - sizeof(quint16));
 
-    tcpSocket->write(block);
-    tcpSocket->disconnectFromHost();
+        tcpSocket->write(block);
+        tcpSocket->disconnectFromHost();
+    } else {
+        QMessageBox::critical(this, tr("Server"), tr("Failed to connect to client"));
+    }
 }

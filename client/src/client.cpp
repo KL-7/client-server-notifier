@@ -23,7 +23,7 @@ void Client::updateUi() {
 
     toggleSocketListeningPushButton->setDisabled(!isListening() && !autoSocketCheckBox->isChecked()
                                                  && hostLineEdit->text().isEmpty());
-    toggleSocketListeningPushButton->setText(isListening() ? tr("Stop") : tr("Start"));
+    toggleSocketListeningPushButton->setText(isListening() ? tr("&Stop") : tr("&Start"));
 }
 
 void Client::toggleSocketListening() {

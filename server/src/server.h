@@ -15,6 +15,8 @@ private slots:
     void sendMessage();
     void sendMessage(QString host, quint16 port, int clientId, QString message);
 
+private:
+    static const int CLIENT_WAIT_TIMEOUT;
 };
 
 #endif // SERVER_H
