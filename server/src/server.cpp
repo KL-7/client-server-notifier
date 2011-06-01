@@ -3,7 +3,7 @@
 
 #include "server.h"
 
-const int Server::CLIENT_WAIT_TIMEOUT = 10;
+const int Server::CLIENT_WAIT_TIMEOUT = 5000;
 
 Server::Server(QWidget *parent) : QDialog(parent) {
     setupUi(this);
@@ -24,8 +24,7 @@ void Server::updateUi() {
 void Server::sendMessage() {
     QString host = clientHostLineEdit->text();
     quint16 port = clientPortSpinBox->value();
-    bool ok;
-    int clientId = clientIdLineEdit->text().toInt(&ok);
+    int clientId = clientIdLineEdit->text().toInt();
     QString message = messageTextEdit->toPlainText();
 
     sendMessage(host, port, clientId, message);
@@ -51,6 +50,19 @@ void Server::sendMessage(QString host, quint16 port, int clientId, QString messa
         tcpSocket->write(block);
         tcpSocket->disconnectFromHost();
     } else {
-        QMessageBox::critical(this, tr("Server"), tr("Failed to connect to client"));
+        log(tr("Failed to connect to client in %1 sec").arg(CLIENT_WAIT_TIMEOUT / 1000), ERR);
+    }
+}
+
+void Server::log(QString message, LogMessageType type) {
+    logTextEdit->append(tr("%1 [%2]:  %3").arg(logMessageTypeToQString(type))
+                        .arg(QTime::currentTime().toString(tr("HH:mm:ss"))).arg(message));
+}
+
+QString Server::logMessageTypeToQString(LogMessageType logMessageType) {
+    switch (logMessageType) {
+        case SYS: return tr("SYS");
+        case ERR: return tr("ERR");
+        default: return tr("MSG");
     }
 }

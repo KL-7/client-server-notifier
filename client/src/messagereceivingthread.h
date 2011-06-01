@@ -12,10 +12,10 @@ class MessageReceivingThread : public QThread {
 
 signals:
     void messageReceived(QString message);
-    void error(QString socketError);
+    void error(QString error);
 
 public:
-    MessageReceivingThread(int socketDescriptor, QObject* parent = 0);
+    MessageReceivingThread(int socketDescriptor, int clientId, QObject* parent = 0);
 
 protected:
     void run();
@@ -25,6 +25,7 @@ private slots:
     void processSocketError(QAbstractSocket::SocketError);
 
 private:
+    int clientId;
     int socketDescriptor;
     quint16 messageSize;
     QTcpSocket* tcpSocket;

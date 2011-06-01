@@ -15,9 +15,6 @@ class Client : public QDialog, private Ui::Client {
 public:
     explicit Client(QWidget *parent = 0);
 
-private:
-    enum LogMessageType { SYS, MSG, ERR };
-
 private slots:
     void updateUi();
     void toggleSocketListening();
@@ -25,17 +22,20 @@ private slots:
     void stopSocketListening();
     void logMessage(QString message);
     void logError(QString error);
-    void log(QString message, LogMessageType type = MSG);
 
 private:
-    QHostAddress host();
-    quint16 port();
-    bool isListening();
-    QString listeningStartedMessage();
-    QString logMessageTypeToQString(LogMessageType logMessageType);
+    enum LogMessageType { SYS, MSG, ERR };
 
     ListeningTcpServer* listeningServer;
     QTcpSocket* serverConnection;
+
+    QHostAddress host();
+    quint16 port();
+    int clientId();
+    bool isListening();
+    QString listeningStartedMessage();
+    QString logMessageTypeToQString(LogMessageType logMessageType);
+    void log(QString message, LogMessageType type = MSG);
 
 };
 

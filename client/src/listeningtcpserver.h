@@ -11,10 +11,13 @@ signals:
     void error(QString socketError);
 
 public:
-    ListeningTcpServer(QObject* parent = 0);
+    ListeningTcpServer(int clientId, QObject* parent = 0);
 
 protected:
     void incomingConnection(int socketDescriptor);
+
+private:
+    int clientId;
 
 };
 

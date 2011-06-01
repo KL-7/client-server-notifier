@@ -16,7 +16,13 @@ private slots:
     void sendMessage(QString host, quint16 port, int clientId, QString message);
 
 private:
+    enum LogMessageType { SYS, MSG, ERR };
+
     static const int CLIENT_WAIT_TIMEOUT;
+
+    QString logMessageTypeToQString(LogMessageType logMessageType);
+    void log(QString message, LogMessageType type = MSG);
+
 };
 
 #endif // SERVER_H

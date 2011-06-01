@@ -8,7 +8,8 @@
 Client::Client(QWidget *parent) : QDialog(parent), listeningServer(0) {
     setupUi(this);
 
-    logTextEdit->setReadOnly(true);
+    clientIdLineEdit->setValidator(new QRegExpValidator(QRegExp(QString("\\d*")), this));
+
     connect(autoSocketCheckBox, SIGNAL(clicked()), this, SLOT(updateUi()));
     connect(hostLineEdit, SIGNAL(textChanged(QString)), this, SLOT(updateUi()));
     connect(toggleSocketListeningPushButton, SIGNAL(clicked()), this, SLOT(toggleSocketListening()));
@@ -19,10 +20,14 @@ Client::Client(QWidget *parent) : QDialog(parent), listeningServer(0) {
 void Client::updateUi() {
     hostLineEdit->setDisabled(isListening() || autoSocketCheckBox->isChecked());
     portSpinBox->setDisabled(isListening() || autoSocketCheckBox->isChecked());
+
+    clientIdLineEdit->setDisabled(isListening());
     autoSocketCheckBox->setEnabled(!isListening());
 
     toggleSocketListeningPushButton->setDisabled(!isListening() && !autoSocketCheckBox->isChecked()
-                                                 && hostLineEdit->text().isEmpty());
+                                                 && (hostLineEdit->text().isEmpty()
+                                                     || clientIdLineEdit->text().isEmpty()));
+
     toggleSocketListeningPushButton->setText(isListening() ? tr("&Stop") : tr("&Start"));
 }
 
@@ -38,7 +43,7 @@ void Client::toggleSocketListening() {
 
 void Client::startSocketListening() {
     if (!listeningServer) {
-        listeningServer = new ListeningTcpServer(this);
+        listeningServer = new ListeningTcpServer(clientId(), this);
         connect(listeningServer, SIGNAL(messageReceived(QString)), this, SLOT(logMessage(QString)));
         connect(listeningServer, SIGNAL(error(QString)),
                 this, SLOT(logError(QString)));
@@ -70,6 +75,10 @@ QHostAddress Client::host() {
 
 quint16 Client::port() {
     return autoSocketCheckBox->isChecked() ? 0 : portSpinBox->value();
+}
+
+int Client::clientId() {
+    return clientIdLineEdit->text().toInt();
 }
 
 void Client::stopSocketListening() {

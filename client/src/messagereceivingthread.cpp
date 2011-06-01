@@ -3,8 +3,9 @@
 #include "messagereceivingthread.h"
 
 
-MessageReceivingThread::MessageReceivingThread(int socketDescriptor, QObject* parent)
-    : QThread(parent), socketDescriptor(socketDescriptor), messageSize(0) {
+MessageReceivingThread::MessageReceivingThread(int socketDescriptor, int clientId, QObject* parent)
+    : QThread(parent), clientId(clientId), socketDescriptor(socketDescriptor), messageSize(0) {
+    qRegisterMetaType<QAbstractSocket::SocketError>("QAbstractSocket::SocketError");
 }
 
 void MessageReceivingThread::run() {
@@ -16,7 +17,6 @@ void MessageReceivingThread::run() {
         return;
     }
 
-    qRegisterMetaType<QAbstractSocket::SocketError>("QAbstractSocket::SocketError");
     connect(tcpSocket, SIGNAL(readyRead()), this, SLOT(readMessage()), Qt::DirectConnection);
     connect(tcpSocket, SIGNAL(error(QAbstractSocket::SocketError)),
             this, SLOT(processSocketError(QAbstractSocket::SocketError)), Qt::DirectConnection);
@@ -44,10 +44,17 @@ void MessageReceivingThread::readMessage() {
         return;
     }
 
-    QString message;
-    in >> message;
+    int messageClientId;
+    in >> messageClientId;
 
-    emit messageReceived(message);
+    if (messageClientId != clientId) {
+        emit error(tr("Wrong client id. Message ignored."));
+    } else {
+        QString message;
+        in >> message;
+
+        emit messageReceived(message);
+    }
 
     tcpSocket->disconnectFromHost();
     exit();
