@@ -18,12 +18,12 @@ SOURCES += \
     src/main.cpp\
     src/client.cpp \
     src/messagereceivingthread.cpp \
-    src/listeningtcpserver.cpp
+    src/serverconnectiontcpserver.cpp
 
 HEADERS += \
     src/client.h \
     src/messagereceivingthread.h \
-    src/listeningtcpserver.h
+    src/serverconnectiontcpserver.h
 
 FORMS += \
     src/client.ui

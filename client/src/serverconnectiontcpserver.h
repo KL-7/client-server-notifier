@@ -3,7 +3,7 @@
 
 #include <QTcpServer>
 
-class ListeningTcpServer : public QTcpServer {
+class ServerConnectionTcpServer : public QTcpServer {
     Q_OBJECT
 
 signals:
@@ -11,14 +11,14 @@ signals:
     void error(QString socketError);
 
 public:
-    ListeningTcpServer(int clientId, QObject* parent = 0);
-    void setClientId(int clientId) { this->clientId = clientId; }
+    ServerConnectionTcpServer(quint16 clientId, QObject* parent = 0);
+    void setClientId(quint16 clientId) { this->clientId = clientId; }
 
 protected:
     void incomingConnection(int socketDescriptor);
 
 private:
-    int clientId;
+    quint16 clientId;
 
 };
 

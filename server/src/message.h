@@ -10,13 +10,14 @@ class QSqlQuery;
 class Message {
 
 public:
-    Message(int clientId, QString host, quint16 port, QString body, int id = -1);
+    Message(quint16 clientId, QString host, quint16 port, QString body, int id = -1);
     Message(const Message& other);
     Message(QSqlRecord record);
 
     static Message* byId(int id);
     static QList<Message> oldest(int limit = 10);
     static QString lastError();
+    static bool hasLastError();
     static int count();
 
     bool touch();
@@ -24,7 +25,7 @@ public:
     bool destroy();
 
     int id;
-    int clientId;
+    quint16 clientId;
     QString host;
     quint16 port;
     QString body;

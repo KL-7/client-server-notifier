@@ -1,10 +1,10 @@
-#include <QTcpSocket>
+#include <QtNetwork>
 #include <QtDebug>
 
 #include "messagereceivingthread.h"
 
 
-MessageReceivingThread::MessageReceivingThread(int socketDescriptor, int clientId, QObject* parent)
+MessageReceivingThread::MessageReceivingThread(int socketDescriptor, quint16 clientId, QObject* parent)
     : QThread(parent), clientId(clientId), socketDescriptor(socketDescriptor), messageSize(0) {
     qRegisterMetaType<QAbstractSocket::SocketError>("QAbstractSocket::SocketError");
 }
@@ -47,7 +47,7 @@ void MessageReceivingThread::readMessage() {
         return;
     }
 
-    int messageClientId;
+    quint16 messageClientId;
     QString message;
 
     in >> messageClientId;

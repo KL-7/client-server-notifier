@@ -17,15 +17,20 @@ RCC_DIR = tmp
 SOURCES += \
     src/main.cpp\
     src/server.cpp \
-    src/sendmessagethread.cpp \
     src/message.cpp \
-    src/addmessagedialog.cpp
+    src/addmessagedialog.cpp \
+    src/adminconnectiontcpserver.cpp \
+    src/messagereceivingthread.cpp \
+    src/messagesendingthread.cpp
 
 HEADERS += \
     src/server.h \
     src/sendmessagethread.h \
     src/message.h \
-    src/addmessagedialog.h
+    src/addmessagedialog.h \
+    src/adminconnectiontcpserver.h \
+    src/messagereceivingthread.h \
+    src/messagesendingthread.h
 
 FORMS += \
     src/server.ui \

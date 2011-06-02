@@ -6,7 +6,7 @@
 const QString Message::TABLE_NAME = "messages";
 QString Message::lastErrorText;
 
-Message::Message(int clientId, QString host, quint16 port, QString body, int id)
+Message::Message(quint16 clientId, QString host, quint16 port, QString body, int id)
     : id(id), clientId(clientId), host(host), port(port), body(body) {
 }
 
@@ -20,7 +20,7 @@ Message::Message(const Message &other) {
 
 Message::Message(QSqlRecord record) {
     id = record.value("id").toInt();
-    clientId = record.value("client_id").toInt();
+    clientId = record.value("client_id").toUInt();
     host = record.value("host").toString();
     port = record.value("port").toInt();
     body = record.value("body").toString();
@@ -28,7 +28,7 @@ Message::Message(QSqlRecord record) {
 
 void Message::saveLastError(QSqlQuery query) {
     if (!query.lastError().text().isEmpty()) {
-        Message::lastErrorText = query.lastError().text();
+        Message::lastErrorText = query.lastError().text().trimmed();
     }
 }
 
@@ -36,6 +36,10 @@ QString Message::lastError() {
     QString tmp = lastErrorText;
     lastErrorText = QString();
     return tmp;
+}
+
+bool Message::hasLastError() {
+    return !lastErrorText.isEmpty();
 }
 
 int Message::count() {

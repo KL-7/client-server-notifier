@@ -24,6 +24,7 @@ private slots:
     void onMessageDelivered(int messageId);
     void deliverMessagesBunch();
     void toggleDelivery();
+    void toggleAdminConnection();
 
 private:
     enum LogMessageType { SYS, MSG, ERR };
@@ -37,6 +38,7 @@ private:
     QSqlTableModel* model;
     AddMessageDialog* addMessageDialog;
 
+    bool isAdminConnectionRunning();
     void sendMessage(Message message);
     QString logMessageTypeToQString(LogMessageType logMessageType);
     void log(QString message, LogMessageType type = SYS);

@@ -2,13 +2,11 @@
 #include <QtNetwork>
 
 #include "client.h"
-#include "listeningtcpserver.h"
+#include "serverconnectiontcpserver.h"
 
 
 Client::Client(QWidget *parent) : QDialog(parent), listeningServer(0) {
     setupUi(this);
-
-    clientIdLineEdit->setValidator(new QRegExpValidator(QRegExp(QString("\\d*")), this));
 
     connect(autoSocketCheckBox, SIGNAL(clicked()), this, SLOT(updateUi()));
     connect(hostLineEdit, SIGNAL(textChanged(QString)), this, SLOT(updateUi()));
@@ -21,12 +19,12 @@ void Client::updateUi() {
     hostLineEdit->setDisabled(isListening() || autoSocketCheckBox->isChecked());
     portSpinBox->setDisabled(isListening() || autoSocketCheckBox->isChecked());
 
-    clientIdLineEdit->setDisabled(isListening());
+    clientIdSpinBox->setDisabled(isListening());
     autoSocketCheckBox->setEnabled(!isListening());
 
     toggleSocketListeningPushButton->setDisabled(!isListening() && !autoSocketCheckBox->isChecked()
                                                  && (hostLineEdit->text().isEmpty()
-                                                     || clientIdLineEdit->text().isEmpty()));
+                                                     || clientIdSpinBox->text().isEmpty()));
 
     toggleSocketListeningPushButton->setText(isListening() ? tr("&Stop") : tr("&Start"));
 }
@@ -43,7 +41,7 @@ void Client::toggleSocketListening() {
 
 void Client::startSocketListening() {
     if (!listeningServer) {
-        listeningServer = new ListeningTcpServer(clientId(), this);
+        listeningServer = new ServerConnectionTcpServer(clientId(), this);
         connect(listeningServer, SIGNAL(messageReceived(QString)), this, SLOT(logMessage(QString)));
         connect(listeningServer, SIGNAL(error(QString)),
                 this, SLOT(logError(QString)));
@@ -78,8 +76,8 @@ quint16 Client::port() {
     return autoSocketCheckBox->isChecked() ? 0 : portSpinBox->value();
 }
 
-int Client::clientId() {
-    return clientIdLineEdit->text().toInt();
+quint16 Client::clientId() {
+    return clientIdSpinBox->text().toUInt();
 }
 
 void Client::stopSocketListening() {

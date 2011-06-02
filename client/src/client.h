@@ -5,7 +5,7 @@
 
 #include "ui_client.h"
 
-class ListeningTcpServer;
+class ServerConnectionTcpServer;
 class QTcpSocket;
 class QHostAddress;
 
@@ -26,12 +26,12 @@ private slots:
 private:
     enum LogMessageType { SYS, MSG, ERR };
 
-    ListeningTcpServer* listeningServer;
+    ServerConnectionTcpServer* listeningServer;
     QTcpSocket* serverConnection;
 
     QHostAddress host();
     quint16 port();
-    int clientId();
+    quint16 clientId();
     bool isListening();
     QString listeningStartedMessage();
     QString logMessageTypeToQString(LogMessageType logMessageType);

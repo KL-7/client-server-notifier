@@ -1,10 +1,11 @@
-#include "listeningtcpserver.h"
+#include "serverconnectiontcpserver.h"
 #include "messagereceivingthread.h"
 
-ListeningTcpServer::ListeningTcpServer(int clientId, QObject* parent) : QTcpServer(parent), clientId(clientId) {
+ServerConnectionTcpServer::ServerConnectionTcpServer(quint16 clientId, QObject* parent)
+    : QTcpServer(parent), clientId(clientId) {
 }
 
-void ListeningTcpServer::incomingConnection(int socketDescriptor) {
+void ServerConnectionTcpServer::incomingConnection(int socketDescriptor) {
     MessageReceivingThread* thread = new MessageReceivingThread(socketDescriptor, clientId, this);
     connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
     connect(thread, SIGNAL(messageReceived(QString)), this, SIGNAL(messageReceived(QString)));

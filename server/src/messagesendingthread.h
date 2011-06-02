@@ -8,11 +8,11 @@
 
 class QTcpSocket;
 
-class SendMessageThread : public QThread {
+class MessageSendingThread : public QThread {
     Q_OBJECT
 
 public:
-    SendMessageThread(Message message, int timeout, QObject* parent = 0);
+    MessageSendingThread(Message message, int timeout, QObject* parent = 0);
 
 signals:
     void error(QString error);

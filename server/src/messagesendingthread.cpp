@@ -1,13 +1,13 @@
-#include <QTcpSocket>
+#include <QtNetwork>
 
-#include "sendmessagethread.h"
+#include "messagesendingthread.h"
 
 
-SendMessageThread::SendMessageThread(Message message, int timeout, QObject* parent)
+MessageSendingThread::MessageSendingThread(Message message, int timeout, QObject* parent)
     : QThread(parent), message(message), timeout(timeout) {
 }
 
-void SendMessageThread::run() {
+void MessageSendingThread::run() {
     tcpSocket = new QTcpSocket();
     tcpSocket->connectToHost(message.host, message.port);
 
@@ -20,6 +20,7 @@ void SendMessageThread::run() {
         out << (quint16)0;
         out << message.clientId;
         out << message.body;
+
         out.device()->seek(0);
         out << (quint16)(block.size() - sizeof(quint16));
 

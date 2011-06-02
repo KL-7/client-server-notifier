@@ -4,7 +4,7 @@
 #include <QtSql>
 
 #include "server.h"
-#include "sendmessagethread.h"
+#include "messagesendingthread.h"
 #include "addmessagedialog.h"
 
 
@@ -40,19 +40,23 @@ void Server::initDB() {
 void Server::initUi() {
     setupUi(this);
 
-    connect(startStopPushButton, SIGNAL(clicked()), this, SLOT(toggleDelivery()));
+    connect(startStopDeliveryLoopPushButton, SIGNAL(clicked()), this, SLOT(toggleDelivery()));
     connect(addMessagePushButton, SIGNAL(clicked()), this, SLOT(showAddMessageDialog()));
+    connect(toggleAdminConnectionPushButton, SIGNAL(clicked()), this, SLOT(toggleAdminConnection()));
+    connect(hostLineEdit, SIGNAL(textChanged(QString)), this, SLOT(updateUi()));
 }
 
 void Server::toggleDelivery() {
     if (deliveryTimer->isActive()) {
         deliveryTimer->stop();
-        startStopPushButton->setText(tr("&Start"));
+        startStopDeliveryLoopPushButton->setText(tr("&Start delivery loop"));
     } else {
         deliverMessagesBunch();
         deliveryTimer->start(MESSAGES_DELIVERY_INTERVAL);
-        startStopPushButton->setText(tr("&Stop"));
+        startStopDeliveryLoopPushButton->setText(tr("&Stop delivery loop"));
     }
+
+    updateUi();
 }
 
 void Server::showAddMessageDialog() {
@@ -68,19 +72,29 @@ void Server::showAddMessageDialog() {
 
 void Server::updateUi() {
     pendingMessagesCountLabel->setText(QString::number(Message::count()));
+    hostLineEdit->setDisabled(isAdminConnectionRunning());
+    portSpinBox->setDisabled(isAdminConnectionRunning());
+    toggleAdminConnectionPushButton->setText(
+            isAdminConnectionRunning() ? tr("&Disable admin connection") : tr("&Enable admin connection"));
+}
+
+void Server::toggleAdminConnection() {
+
+}
+
+bool Server::isAdminConnectionRunning() {
+    return false;
 }
 
 void Server::deliverMessagesBunch() {
-    qDebug() << "delivering";
     foreach(Message message, Message::oldest(MESSAGES_DELIVERY_BUNCH_SIZE)) {
         sendMessage(message);
     }
-    qDebug() << Message::lastError();
 }
 
 void Server::addMessage(Message message) {
     message.save();
-    if (message.lastError().isEmpty()) {
+    if (!message.hasLastError()) {
         log(tr("Message with id %1 successfully saved").arg(message.id));
     } else {
         log(tr("Failed to save message into DB"), ERR);
@@ -90,7 +104,7 @@ void Server::addMessage(Message message) {
 }
 
 void Server::sendMessage(Message message) {
-    SendMessageThread* thread = new SendMessageThread(message, CLIENT_WAIT_TIMEOUT, this);
+    MessageSendingThread* thread = new MessageSendingThread(message, CLIENT_WAIT_TIMEOUT, this);
     connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
     connect(thread, SIGNAL(error(QString)), this, SLOT(onError(QString)));
     connect(thread, SIGNAL(messageDelivered(int)), this, SLOT(onMessageDelivered(int)));

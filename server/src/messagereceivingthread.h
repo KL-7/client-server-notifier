@@ -15,7 +15,7 @@ signals:
     void error(QString error);
 
 public:
-    MessageReceivingThread(int socketDescriptor, quint16 clientId, QObject* parent = 0);
+    MessageReceivingThread(int socketDescriptor, QObject* parent = 0);
 
 protected:
     void run();
@@ -25,10 +25,9 @@ private slots:
     void processSocketError(QAbstractSocket::SocketError);
 
 private:
-    quint16 clientId;
     int socketDescriptor;
     quint16 messageSize;
-    QTcpSocket* tcpSocket;
+    QTcpSocket* adminConnection;
 
 };
 
