@@ -34,6 +34,3 @@ HEADERS += \
 FORMS += \
     src/server.ui \
     src/addmessagedialog.ui
-
-RESOURCES += \
-    resources.qrc

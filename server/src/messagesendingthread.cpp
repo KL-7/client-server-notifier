@@ -4,30 +4,22 @@
 #include "messagesendingthread.h"
 
 
-MessageSendingThread::MessageSendingThread(Message message, QSslConfiguration sslConfiguration,
-                                           int timeout, QObject *parent)
-    : QThread(parent), sslConfiguration(sslConfiguration), message(message), timeout(timeout) {
+MessageSendingThread::MessageSendingThread(Message message, int timeout, QObject *parent)
+    : QThread(parent), message(message), timeout(timeout) {
+    qRegisterMetaType<QAbstractSocket::SocketState>("QAbstractSocket::SocketState");
 }
 
 void MessageSendingThread::run() {
-    qDebug() << "server: new MessageSendingThread";
+    socket = new QTcpSocket;
 
-    socket = new QSslSocket();
-    socket->setSslConfiguration(sslConfiguration);
     socket->connectToHost(message.host, message.port);
-
-    socket->startServerEncryption();
 
     connect(socket, SIGNAL(disconnected()), socket, SLOT(deleteLater()));
 
     connect(socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
-            this, SLOT(onStateChanged(QAbstractSocket::SocketState)), Qt::DirectConnection);
-    connect(socket, SIGNAL(modeChanged(QSslSocket::SslMode)),
-            this, SLOT(onModeChanged(QSslSocket::SslMode)), Qt::DirectConnection);
+            this, SLOT(onStateChanged(QAbstractSocket::SocketState)));
 
-    if (socket->waitForEncrypted(timeout)) {
-        qDebug() << "server: is " << (socket->isEncrypted() ? "encrypted" : "non-encrypted");
-
+    if (socket->waitForConnected(timeout)) {
         QByteArray block;
         QDataStream out(&block, QIODevice::WriteOnly);
 
@@ -40,7 +32,7 @@ void MessageSendingThread::run() {
 
         socket->write(block);
 
-        if(socket->waitForReadyRead(timeout / 4)) {
+        if(socket->waitForReadyRead(timeout)) {
             QDataStream in(socket);
             quint8 res;
             in >> res;
@@ -57,12 +49,6 @@ void MessageSendingThread::run() {
     } else {
         emit error(tr("Failed to connect to %1:%2 in %3 sec").arg(message.host).arg(message.port).arg(timeout / 1000));
     }
-
-    qDebug() << "server: closing MessageSendingThread";
-}
-
-void MessageSendingThread::onModeChanged(QSslSocket::SslMode mode) {
-    qDebug() << mode;
 }
 
 void MessageSendingThread::onStateChanged(QAbstractSocket::SocketState state) {

@@ -16,7 +16,10 @@ signals:
     void error(QString error);
 
 public:
-    MessageReceivingThread(QSslConfiguration sslConfiguration, int socketDescriptor, QObject* parent = 0);
+    MessageReceivingThread(int socketDescriptor, QObject* parent = 0);
+
+public slots:
+    void disconnect();
 
 protected:
     void run();
@@ -24,14 +27,12 @@ protected:
 private slots:
     void readMessage();
     void processSocketError(QAbstractSocket::SocketError);
-    void onModeChanged(QSslSocket::SslMode mode);
     void onStateChanged(QAbstractSocket::SocketState state);
 
 private:
-    QSslConfiguration sslConfiguration;
     int socketDescriptor;
     quint16 messageSize;
-    QSslSocket* socket;
+    QTcpSocket* socket;
 
 };
 

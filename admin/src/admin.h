@@ -14,11 +14,14 @@ public:
 private slots:
     void updateUi();
     void toggleConnection();
-    void onModeChanged(QSslSocket::SslMode mode);
     void onStateChanged(QAbstractSocket::SocketState state);
+    void sendMessage();
+    void onError(QAbstractSocket::SocketError);
 
 private:
-    QSslSocket* socket;
+    static const int SERVER_WAIT_TIMEOUT;
+
+    QTcpSocket* socket;
 
     bool isConnected();
     void connectToServer();

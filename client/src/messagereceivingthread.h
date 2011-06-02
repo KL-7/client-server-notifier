@@ -2,7 +2,7 @@
 #define MESSAGERECEIVINGTHREAD_H
 
 #include <QThread>
-#include <QSslSocket>
+#include <QTcpSocket>
 
 
 Q_DECLARE_METATYPE(QAbstractSocket::SocketError)
@@ -23,14 +23,13 @@ protected:
 private slots:
     void readMessage();
     void processSocketError(QAbstractSocket::SocketError);
-    void onModeChanged(QSslSocket::SslMode mode);
     void onStateChanged(QAbstractSocket::SocketState state);
 
 private:
     quint16 clientId;
     int socketDescriptor;
     quint16 messageSize;
-    QSslSocket* socket;
+    QTcpSocket* socket;
 
 };
 

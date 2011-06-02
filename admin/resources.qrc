@@ -1,6 +1,0 @@
-<RCC>
-    <qresource prefix="/">
-        <file alias="crt">resources/admin.crt</file>
-        <file alias="key">resources/admin.key</file>
-    </qresource>
-</RCC>

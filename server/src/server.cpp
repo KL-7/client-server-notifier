@@ -18,7 +18,6 @@ Server::Server(QWidget *parent) : QDialog(parent), addMessageDialog(0), adminCon
 
     initUi();
     initDB();
-    initSslConfiguration();
 
     deliveryTimer = new QTimer(this);
     connect(deliveryTimer, SIGNAL(timeout()), this, SLOT(deliverMessagesBunch()));
@@ -48,20 +47,6 @@ void Server::initUi() {
     connect(toggleAdminConnectionPushButton, SIGNAL(clicked()), this, SLOT(toggleAdminConnection()));
     connect(hostLineEdit, SIGNAL(textChanged(QString)), this, SLOT(updateUi()));
     connect(deleteAllMessagesPushButton, SIGNAL(clicked()), this, SLOT(deleteAllMessages()));
-}
-
-void Server::initSslConfiguration() {
-    sslConfiguration = new QSslConfiguration;
-
-    QFile key(":/key");
-    key.open(QIODevice::ReadOnly);
-    sslConfiguration->setPrivateKey(QSslKey(key.readAll(), QSsl::Rsa));
-    key.close();
-
-    QFile crt(":/crt");
-    crt.open(QIODevice::ReadOnly);
-    sslConfiguration->setLocalCertificate(QSslCertificate(crt.readAll(), QSsl::Pem));
-    crt.close();
 }
 
 void Server::toggleDelivery() {
@@ -109,13 +94,8 @@ void Server::toggleAdminConnection() {
 }
 
 void Server::openAdminConnection() {
-//    foreach(QSslCipher cipher, QSslSocket::supportedCiphers()) {
-//        qDebug() << cipher.name() << ":\t" << cipher.encryptionMethod() << ",\t" << cipher.keyExchangeMethod()
-//                << ",\t" << cipher.protocolString();
-//    }
-
     if (!adminConnectionServer) {
-        adminConnectionServer = new AdminConnectionTcpServer(*sslConfiguration, this);
+        adminConnectionServer = new AdminConnectionTcpServer(this);
         connect(adminConnectionServer, SIGNAL(messageReceived(Message)), this, SLOT(onMessageRecieved(Message)));
         connect(adminConnectionServer, SIGNAL(error(QString)),
                 this, SLOT(onError(QString)));
@@ -138,6 +118,7 @@ void Server::deleteAllMessages() {
 
 void Server::closeAdminConnection() {
     if (isAdminConnectionRunning()) {
+        adminConnectionServer->closeConnection();
         adminConnectionServer->close();
     }
 
@@ -187,7 +168,7 @@ void Server::addMessage(Message message) {
 }
 
 void Server::sendMessage(Message message) {
-    MessageSendingThread* thread = new MessageSendingThread(message, *sslConfiguration, CLIENT_WAIT_TIMEOUT, this);
+    MessageSendingThread* thread = new MessageSendingThread(message, CLIENT_WAIT_TIMEOUT, this);
     connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
     connect(thread, SIGNAL(error(QString)), this, SLOT(onError(QString)));
     connect(thread, SIGNAL(messageDelivered(int)), this, SLOT(onMessageDelivered(int)));

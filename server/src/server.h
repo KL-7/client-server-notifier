@@ -38,13 +38,11 @@ private:
 
     void initUi();
     void initDB();
-    void initSslConfiguration();
 
     QTimer* deliveryTimer;
     QSqlTableModel* model;
     AddMessageDialog* addMessageDialog;
     AdminConnectionTcpServer* adminConnectionServer;
-    QSslConfiguration* sslConfiguration;
 
     QHostAddress host();
     quint16 port();
