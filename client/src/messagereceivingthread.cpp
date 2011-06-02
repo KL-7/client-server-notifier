@@ -1,7 +1,12 @@
 #include <QtNetwork>
 #include <QtDebug>
+#include <QtCrypto>
 
 #include "messagereceivingthread.h"
+
+
+const QByteArray MessageReceivingThread::INITIALIZATION_VECTOR("initialization_vector");
+const QByteArray MessageReceivingThread::AES_KEY("symmetric_key");
 
 
 MessageReceivingThread::MessageReceivingThread(int socketDescriptor, quint16 clientId, QObject* parent)
@@ -53,7 +58,7 @@ void MessageReceivingThread::readMessage() {
     }
 
     quint16 messageClientId;
-    QString message;
+    QByteArray message;
 
     in >> messageClientId;
     in >> message;
@@ -64,7 +69,7 @@ void MessageReceivingThread::readMessage() {
         emit error(tr("Wrong client id %1. Message ignored.").arg(messageClientId));
     } else {
         out << (quint8)1;
-        emit messageReceived(message);
+        emit messageReceived(decrypt(message));
     }
 
     socket->disconnect();
@@ -73,4 +78,16 @@ void MessageReceivingThread::readMessage() {
 
 void MessageReceivingThread::onStateChanged(QAbstractSocket::SocketState state) {
     qDebug() << state;
+}
+
+QString MessageReceivingThread::decrypt(QByteArray text) {
+    QCA::Initializer init;
+    QCA::InitializationVector iv(INITIALIZATION_VECTOR);
+    QCA::SymmetricKey key(AES_KEY);
+
+    QCA::Cipher cipher(QString("aes128"), QCA::Cipher::CBC,
+                       QCA::Cipher::DefaultPadding, QCA::Decode,
+                       key, iv);
+
+    return cipher.process(text).toByteArray();
 }

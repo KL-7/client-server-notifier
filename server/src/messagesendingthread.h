@@ -28,6 +28,11 @@ private:
 
     Message message;
     int timeout;
+    static const QByteArray INITIALIZATION_VECTOR;
+    static const QByteArray AES_KEY;
+
+
+    QByteArray encrypt(QString text);
 
 };
 

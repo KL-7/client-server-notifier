@@ -31,6 +31,11 @@ private:
     quint16 messageSize;
     QTcpSocket* socket;
 
+    static const QByteArray INITIALIZATION_VECTOR;
+    static const QByteArray AES_KEY;
+
+    QString decrypt(QByteArray text);
+
 };
 
 #endif // MESSAGERECEIVINGTHREAD_H

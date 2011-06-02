@@ -6,6 +6,8 @@
 
 QT += core gui network sql
 
+CONFIG += crypto
+
 TARGET = ../bin/server
 TEMPLATE = app
 

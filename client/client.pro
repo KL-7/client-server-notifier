@@ -6,6 +6,8 @@
 
 QT += core gui network
 
+CONFIG += crypto
+
 TARGET = ../bin/client
 TEMPLATE = app
 

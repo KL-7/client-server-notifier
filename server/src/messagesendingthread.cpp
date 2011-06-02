@@ -1,7 +1,12 @@
 #include <QtNetwork>
 #include <QtDebug>
+#include <QtCrypto>
 
 #include "messagesendingthread.h"
+
+
+const QByteArray MessageSendingThread::INITIALIZATION_VECTOR("initialization_vector");
+const QByteArray MessageSendingThread::AES_KEY("symmetric_key");
 
 
 MessageSendingThread::MessageSendingThread(Message message, int timeout, QObject *parent)
@@ -25,7 +30,7 @@ void MessageSendingThread::run() {
 
         out << (quint16)0;
         out << message.clientId;
-        out << message.body;
+        out << encrypt(message.body);
 
         out.device()->seek(0);
         out << (quint16)(block.size() - sizeof(quint16));
@@ -53,4 +58,17 @@ void MessageSendingThread::run() {
 
 void MessageSendingThread::onStateChanged(QAbstractSocket::SocketState state) {
     qDebug() << state;
+}
+
+QByteArray MessageSendingThread::encrypt(QString text) {
+    QCA::Initializer init;
+
+    QCA::InitializationVector iv(INITIALIZATION_VECTOR);
+    QCA::SymmetricKey key(AES_KEY);
+
+    QCA::Cipher cipher(QString("aes128"), QCA::Cipher::CBC,
+                       QCA::Cipher::DefaultPadding, QCA::Encode,
+                       key, iv);
+
+    return cipher.process(text.toAscii()).toByteArray();
 }

@@ -1,11 +1,10 @@
 #include <QtGui/QApplication>
 #include "admin.h"
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
-    Admin w;
-    w.show();
+    Admin admin;
+    admin.show();
 
     return a.exec();
 }
