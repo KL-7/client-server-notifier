@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="ca.key">resources/CA.key</file>
+        <file alias="ca.crt">resources/CA.crt</file>
+    </qresource>
+</RCC>

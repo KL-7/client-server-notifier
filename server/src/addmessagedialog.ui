@@ -73,11 +73,14 @@
          </item>
          <item>
           <widget class="QSpinBox" name="clientPortSpinBox">
+           <property name="minimum">
+            <number>49152</number>
+           </property>
            <property name="maximum">
             <number>65535</number>
            </property>
            <property name="value">
-            <number>43210</number>
+            <number>56789</number>
            </property>
           </widget>
          </item>

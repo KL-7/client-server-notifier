@@ -58,7 +58,14 @@
         <number>65535</number>
        </property>
        <property name="value">
-        <number>56789</number>
+        <number>56665</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="autoSocketCheckBox">
+       <property name="text">
+        <string>&amp;Auto</string>
        </property>
       </widget>
      </item>
@@ -111,6 +118,13 @@
       <widget class="QPushButton" name="addMessagePushButton">
        <property name="text">
         <string>&amp;Add message</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="deleteAllMessagesPushButton">
+       <property name="text">
+        <string>&amp;Delete all messages</string>
        </property>
       </widget>
      </item>
@@ -167,6 +181,16 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>hostLineEdit</tabstop>
+  <tabstop>portSpinBox</tabstop>
+  <tabstop>autoSocketCheckBox</tabstop>
+  <tabstop>toggleAdminConnectionPushButton</tabstop>
+  <tabstop>startStopDeliveryLoopPushButton</tabstop>
+  <tabstop>addMessagePushButton</tabstop>
+  <tabstop>logTextEdit</tabstop>
+  <tabstop>clearLogPushButton</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
@@ -176,12 +200,44 @@
    <slot>clear()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>305</x>
-     <y>456</y>
+     <x>550</x>
+     <y>379</y>
     </hint>
     <hint type="destinationlabel">
-     <x>258</x>
-     <y>393</y>
+     <x>269</x>
+     <y>344</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>autoSocketCheckBox</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>hostLineEdit</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>363</x>
+     <y>24</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>123</x>
+     <y>22</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>autoSocketCheckBox</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>portSpinBox</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>356</x>
+     <y>31</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>281</x>
+     <y>23</y>
     </hint>
    </hints>
   </connection>

@@ -2,7 +2,8 @@
 #define MESSAGERECEIVINGTHREAD_H
 
 #include <QThread>
-#include <QTcpSocket>
+#include <QtNetwork>
+#include "message.h"
 
 
 Q_DECLARE_METATYPE(QAbstractSocket::SocketError)
@@ -11,11 +12,11 @@ class MessageReceivingThread : public QThread {
     Q_OBJECT
 
 signals:
-    void messageReceived(QString message);
+    void messageReceived(Message message);
     void error(QString error);
 
 public:
-    MessageReceivingThread(int socketDescriptor, QObject* parent = 0);
+    MessageReceivingThread(QSslConfiguration sslConfiguration, int socketDescriptor, QObject* parent = 0);
 
 protected:
     void run();
@@ -23,11 +24,14 @@ protected:
 private slots:
     void readMessage();
     void processSocketError(QAbstractSocket::SocketError);
+    void onModeChanged(QSslSocket::SslMode mode);
+    void onStateChanged(QAbstractSocket::SocketState state);
 
 private:
+    QSslConfiguration sslConfiguration;
     int socketDescriptor;
     quint16 messageSize;
-    QTcpSocket* adminConnection;
+    QSslSocket* socket;
 
 };
 

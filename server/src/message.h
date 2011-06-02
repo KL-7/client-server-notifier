@@ -2,6 +2,7 @@
 #define MESSAGE_H
 
 #include <QString>
+#include <QMetaType>
 
 
 class QSqlRecord;
@@ -10,6 +11,7 @@ class QSqlQuery;
 class Message {
 
 public:
+    Message();
     Message(quint16 clientId, QString host, quint16 port, QString body, int id = -1);
     Message(const Message& other);
     Message(QSqlRecord record);
@@ -19,6 +21,7 @@ public:
     static QString lastError();
     static bool hasLastError();
     static int count();
+    static bool destroyAll();
 
     bool touch();
     bool save();
@@ -38,5 +41,7 @@ private:
     static QString lastErrorText;
 
 };
+
+Q_DECLARE_METATYPE(Message)
 
 #endif // MESSAGE_H

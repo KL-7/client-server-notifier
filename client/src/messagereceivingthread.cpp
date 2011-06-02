@@ -10,40 +10,57 @@ MessageReceivingThread::MessageReceivingThread(int socketDescriptor, quint16 cli
 }
 
 void MessageReceivingThread::run() {
-    tcpSocket = new QTcpSocket();
-    connect(tcpSocket, SIGNAL(disconnected()), tcpSocket, SLOT(deleteLater()));
-    connect(tcpSocket, SIGNAL(disconnected()), this, SLOT(quit()));
+    qDebug() << "client: new MessageReceivingThread";
 
-    if (!tcpSocket->setSocketDescriptor(socketDescriptor)) {
-        emit error(tcpSocket->errorString());
+    socket = new QSslSocket();
+    socket->setPeerVerifyMode(QSslSocket::VerifyNone);
+
+    connect(socket, SIGNAL(disconnected()), socket, SLOT(deleteLater()));
+    connect(socket, SIGNAL(disconnected()), this, SLOT(quit()));
+
+//    connect(socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
+//            this, SLOT(onStateChanged(QAbstractSocket::SocketState)));
+//    connect(socket, SIGNAL(modeChanged(QSslSocket::SslMode)),
+//            this, SLOT(onModeChanged(QSslSocket::SslMode)));
+
+    if (!socket->setSocketDescriptor(socketDescriptor)) {
+        emit error(socket->errorString());
         return;
     }
 
-    connect(tcpSocket, SIGNAL(readyRead()), this, SLOT(readMessage()), Qt::DirectConnection);
-    connect(tcpSocket, SIGNAL(error(QAbstractSocket::SocketError)),
-            this, SLOT(processSocketError(QAbstractSocket::SocketError)), Qt::DirectConnection);
+    socket->startClientEncryption();
+
+    connect(socket, SIGNAL(encrypted()), this, SLOT(readMessage()));
+    connect(socket, SIGNAL(error(QAbstractSocket::SocketError)),
+            this, SLOT(processSocketError(QAbstractSocket::SocketError)));
 
     exec();
+
+    qDebug() << "client: MessageReceivingThread exit";
 }
 
 void MessageReceivingThread::processSocketError(QAbstractSocket::SocketError) {
-    if (tcpSocket->error() != QAbstractSocket::RemoteHostClosedError) {
-        emit error(tcpSocket->errorString());
+    if (socket->error() != QAbstractSocket::RemoteHostClosedError) {
+        emit error(socket->errorString());
     }
 }
 
 void MessageReceivingThread::readMessage() {
-    QDataStream in(tcpSocket);
+    connect(socket, SIGNAL(readyRead()), this, SLOT(readMessage()));
+
+    qDebug() << "client: is " << (socket->isEncrypted() ? "encrypted" : "non-encrypted");
+
+    QDataStream in(socket);
 
     if (messageSize == 0) {
-        if (tcpSocket->bytesAvailable() < (int)sizeof(quint16)) {
+        if (socket->bytesAvailable() < (int)sizeof(quint16)) {
             return;
         }
 
         in >> messageSize;
     }
 
-    if (tcpSocket->bytesAvailable() < messageSize) {
+    if (socket->bytesAvailable() < messageSize) {
         return;
     }
 
@@ -53,7 +70,9 @@ void MessageReceivingThread::readMessage() {
     in >> messageClientId;
     in >> message;
 
-    QDataStream out(tcpSocket);
+    qDebug() << "client: message read";
+
+    QDataStream out(socket);
     if (messageClientId != clientId) {
         out << (quint8)0;
         emit error(tr("Wrong client id %1. Message ignored.").arg(messageClientId));
@@ -62,6 +81,15 @@ void MessageReceivingThread::readMessage() {
         emit messageReceived(message);
     }
 
-    tcpSocket->waitForDisconnected();
+//    socket->waitForDisconnected(1000);
+    socket->disconnect();
     exit();
+}
+
+void MessageReceivingThread::onModeChanged(QSslSocket::SslMode mode) {
+    qDebug() << mode;
+}
+
+void MessageReceivingThread::onStateChanged(QAbstractSocket::SocketState state) {
+    qDebug() << state;
 }

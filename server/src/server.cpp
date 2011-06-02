@@ -13,9 +13,12 @@ const int Server::MESSAGES_DELIVERY_BUNCH_SIZE = 10;
 const int Server::MESSAGES_DELIVERY_INTERVAL = 10000;
 const QString Server::DATABASE_NAME = QString("messages.sqlite");
 
-Server::Server(QWidget *parent) : QDialog(parent), addMessageDialog(0) {
+Server::Server(QWidget *parent) : QDialog(parent), addMessageDialog(0), adminConnectionServer(0) {
+    qRegisterMetaType<Message>("Message");
+
     initUi();
     initDB();
+    initSslConfiguration();
 
     deliveryTimer = new QTimer(this);
     connect(deliveryTimer, SIGNAL(timeout()), this, SLOT(deliverMessagesBunch()));
@@ -44,16 +47,33 @@ void Server::initUi() {
     connect(addMessagePushButton, SIGNAL(clicked()), this, SLOT(showAddMessageDialog()));
     connect(toggleAdminConnectionPushButton, SIGNAL(clicked()), this, SLOT(toggleAdminConnection()));
     connect(hostLineEdit, SIGNAL(textChanged(QString)), this, SLOT(updateUi()));
+    connect(deleteAllMessagesPushButton, SIGNAL(clicked()), this, SLOT(deleteAllMessages()));
+}
+
+void Server::initSslConfiguration() {
+    sslConfiguration = new QSslConfiguration;
+
+    QFile key(":/ca.key");
+    key.open(QIODevice::ReadOnly);
+    sslConfiguration->setPrivateKey(QSslKey(key.readAll(), QSsl::Rsa));
+    key.close();
+
+    QFile crt(":/ca.crt");
+    crt.open(QIODevice::ReadOnly);
+    sslConfiguration->setLocalCertificate(QSslCertificate(crt.readAll(), QSsl::Pem));
+    crt.close();
 }
 
 void Server::toggleDelivery() {
     if (deliveryTimer->isActive()) {
         deliveryTimer->stop();
         startStopDeliveryLoopPushButton->setText(tr("&Start delivery loop"));
+        log(tr("Delivery loop stopped"), SYS);
     } else {
         deliverMessagesBunch();
         deliveryTimer->start(MESSAGES_DELIVERY_INTERVAL);
         startStopDeliveryLoopPushButton->setText(tr("&Stop delivery loop"));
+        log(tr("Delivery loop started"), SYS);
     }
 
     updateUi();
@@ -79,11 +99,74 @@ void Server::updateUi() {
 }
 
 void Server::toggleAdminConnection() {
+    if (isAdminConnectionRunning()) {
+        closeAdminConnection();
+    } else {
+        openAdminConnection();
+    }
 
+    updateUi();
+}
+
+void Server::openAdminConnection() {
+//    foreach(QSslCipher cipher, QSslSocket::supportedCiphers()) {
+//        qDebug() << cipher.name() << ":\t" << cipher.encryptionMethod() << ",\t" << cipher.keyExchangeMethod()
+//                << ",\t" << cipher.protocolString();
+//    }
+
+    if (!adminConnectionServer) {
+        adminConnectionServer = new AdminConnectionTcpServer(*sslConfiguration, this);
+        connect(adminConnectionServer, SIGNAL(messageReceived(Message)), this, SLOT(onMessageRecieved(Message)));
+        connect(adminConnectionServer, SIGNAL(error(QString)),
+                this, SLOT(onError(QString)));
+    } else if (isAdminConnectionRunning()) {
+        adminConnectionServer->close();
+    }
+
+    if (!adminConnectionServer->listen(host(), port())) {
+        log(adminConnectionServer->errorString(), ERR);
+        return;
+    }
+
+    log(adminConnectionOpenedMessage(), SYS);
+}
+
+void Server::deleteAllMessages() {
+    Message::destroyAll();
+    updateUi();
+}
+
+void Server::closeAdminConnection() {
+    if (isAdminConnectionRunning()) {
+        adminConnectionServer->close();
+    }
+
+    log(tr("Admin connection closed"), SYS);
+}
+
+QHostAddress Server::host() {
+    if (autoSocketCheckBox->isChecked()) {
+        return QHostAddress::Any;
+    } else {
+        if (hostLineEdit->text().toLower() == tr("localhost")) {
+            return QHostAddress::LocalHost;
+        } else {
+            return QHostAddress(hostLineEdit->text());
+        }
+    }
+}
+
+quint16 Server::port() {
+    return autoSocketCheckBox->isChecked() ? 0 : portSpinBox->value();
+}
+
+void Server::onMessageRecieved(Message message) {
+    log(tr("Recieved message from admin"));
+    addMessage(message);
 }
 
 bool Server::isAdminConnectionRunning() {
-    return false;
+    return adminConnectionServer && adminConnectionServer->isListening();
 }
 
 void Server::deliverMessagesBunch() {
@@ -104,7 +187,7 @@ void Server::addMessage(Message message) {
 }
 
 void Server::sendMessage(Message message) {
-    MessageSendingThread* thread = new MessageSendingThread(message, CLIENT_WAIT_TIMEOUT, this);
+    MessageSendingThread* thread = new MessageSendingThread(message, *sslConfiguration, CLIENT_WAIT_TIMEOUT, this);
     connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
     connect(thread, SIGNAL(error(QString)), this, SLOT(onError(QString)));
     connect(thread, SIGNAL(messageDelivered(int)), this, SLOT(onMessageDelivered(int)));
@@ -135,5 +218,25 @@ QString Server::logMessageTypeToQString(LogMessageType logMessageType) {
         case SYS: return tr("SYS");
         case ERR: return tr("ERR");
         default: return tr("MSG");
+    }
+}
+
+
+QString Server::adminConnectionOpenedMessage() {
+    if (isAdminConnectionRunning()) {
+        QString ipAddress;
+        QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
+        for (int i = 0; i < ipAddressesList.size(); ++i) {
+            if (ipAddressesList.at(i) != QHostAddress::LocalHost && ipAddressesList.at(i).toIPv4Address()) {
+                ipAddress = ipAddressesList.at(i).toString();
+                break;
+            }
+        }
+        if (ipAddress.isEmpty()) {
+            ipAddress = QHostAddress(QHostAddress::LocalHost).toString();
+        }
+        return tr("Admin connection opened on %1:%2").arg(ipAddress).arg(adminConnectionServer->serverPort());
+    } else {
+        return "";
     }
 }

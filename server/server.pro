@@ -25,7 +25,6 @@ SOURCES += \
 
 HEADERS += \
     src/server.h \
-    src/sendmessagethread.h \
     src/message.h \
     src/addmessagedialog.h \
     src/adminconnectiontcpserver.h \
@@ -35,3 +34,6 @@ HEADERS += \
 FORMS += \
     src/server.ui \
     src/addmessagedialog.ui
+
+RESOURCES += \
+    resources.qrc

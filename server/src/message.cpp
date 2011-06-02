@@ -1,10 +1,14 @@
 #include <QtSql>
 #include <QVariant>
+#include <QMetaType>
 #include "message.h"
 
 
 const QString Message::TABLE_NAME = "messages";
 QString Message::lastErrorText;
+
+
+Message::Message() : id(-1) { }
 
 Message::Message(quint16 clientId, QString host, quint16 port, QString body, int id)
     : id(id), clientId(clientId), host(host), port(port), body(body) {
@@ -50,6 +54,17 @@ int Message::count() {
 
     saveLastError(query);
     return -1;
+}
+
+bool Message::destroyAll() {
+    QSqlQuery query;
+
+    if (query.exec(QString("delete from %1").arg(TABLE_NAME))) {
+        return true;
+    }
+
+    saveLastError(query);
+    return false;
 }
 
 Message* Message::byId(int id) {

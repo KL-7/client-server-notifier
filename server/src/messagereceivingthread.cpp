@@ -1,58 +1,80 @@
-#include <QTcpSocket>
 #include <QtDebug>
 
 #include "messagereceivingthread.h"
 
 
-MessageReceivingThread::MessageReceivingThread(int socketDescriptor, QObject* parent)
-    : QThread(parent), socketDescriptor(socketDescriptor), messageSize(0) {
+MessageReceivingThread::MessageReceivingThread(QSslConfiguration sslConfiguration,
+                                               int socketDescriptor, QObject* parent)
+    : QThread(parent), sslConfiguration(sslConfiguration), socketDescriptor(socketDescriptor), messageSize(0) {
     qRegisterMetaType<QAbstractSocket::SocketError>("QAbstractSocket::SocketError");
 }
 
 void MessageReceivingThread::run() {
-    adminConnection = new QTcpSocket();
-    connect(adminConnection, SIGNAL(disconnected()), adminConnection, SLOT(deleteLater()));
-    connect(adminConnection, SIGNAL(disconnected()), this, SLOT(quit()));
+    socket = new QSslSocket();
+    socket->setPeerVerifyMode(QSslSocket::VerifyNone);;
 
-    if (!adminConnection->setSocketDescriptor(socketDescriptor)) {
-        emit error(adminConnection->errorString());
+    socket->setSslConfiguration(sslConfiguration);
+
+    qDebug() << socket->privateKey().algorithm();
+
+    connect(socket, SIGNAL(disconnected()), socket, SLOT(deleteLater()));
+    connect(socket, SIGNAL(disconnected()), this, SLOT(quit()));
+
+    connect(socket, SIGNAL(modeChanged(QSslSocket::SslMode)),
+            this, SLOT(onModeChanged(QSslSocket::SslMode)), Qt::DirectConnection);
+    connect(socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
+            this, SLOT(onStateChanged(QAbstractSocket::SocketState)), Qt::DirectConnection);
+
+    if (!socket->setSocketDescriptor(socketDescriptor)) {
+        emit error(socket->errorString());
         return;
     }
 
-    connect(adminConnection, SIGNAL(readyRead()), this, SLOT(readMessage()), Qt::DirectConnection);
-    connect(adminConnection, SIGNAL(error(QAbstractSocket::SocketError)),
+    connect(socket, SIGNAL(readyRead()), this, SLOT(readMessage()), Qt::DirectConnection);
+    connect(socket, SIGNAL(error(QAbstractSocket::SocketError)),
             this, SLOT(processSocketError(QAbstractSocket::SocketError)), Qt::DirectConnection);
+
+    socket->startServerEncryption();
 
     exec();
 }
 
 void MessageReceivingThread::processSocketError(QAbstractSocket::SocketError) {
-    if (adminConnection->error() != QAbstractSocket::RemoteHostClosedError) {
-        emit error(adminConnection->errorString());
+    if (socket->error() != QAbstractSocket::RemoteHostClosedError) {
+        emit error(socket->errorString());
     }
 }
 
 void MessageReceivingThread::readMessage() {
-    QDataStream in(adminConnection);
+//    QDataStream in(socket);
 
-    if (messageSize == 0) {
-        if (adminConnection->bytesAvailable() < (int)sizeof(quint16)) {
-            return;
-        }
+//    if (messageSize == 0) {
+//        if (socket->bytesAvailable() < (int)sizeof(quint16)) {
+//            return;
+//        }
 
-        in >> messageSize;
-    }
+//        in >> messageSize;
+//    }
 
-    if (adminConnection->bytesAvailable() < messageSize) {
-        return;
-    }
+//    if (socket->bytesAvailable() < messageSize) {
+//        return;
+//    }
 
-    QString message;
+//    QString message;
 
-    in >> message;
+//    in >> message;
 
-    emit messageReceived(message);
+//    emit messageReceived(message);
 
-    adminConnection->waitForDisconnected();
+    socket->waitForDisconnected();
     exit();
+}
+
+
+void MessageReceivingThread::onStateChanged(QAbstractSocket::SocketState state) {
+    qDebug() << "state changed to " << state;
+}
+
+void MessageReceivingThread::onModeChanged(QSslSocket::SslMode mode) {
+    qDebug() << "mode changed to " << mode;
 }
