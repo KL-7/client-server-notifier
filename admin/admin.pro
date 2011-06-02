@@ -6,6 +6,7 @@
 
 QT += core gui network
 
+
 TARGET = ../bin/admin
 TEMPLATE = app
 
@@ -24,3 +25,6 @@ HEADERS += \
 
 FORMS += \
     src/admin.ui
+
+RESOURCES += \
+    resources.qrc

@@ -13,7 +13,9 @@ Admin::Admin(QWidget *parent) : QDialog(parent), socket(0) {
 }
 
 void Admin::updateUi() {
-
+    serverHostLineEdit->setDisabled(isConnected());
+    serverPortSpinBox->setDisabled(isConnected());
+    messageGroupBox->setEnabled(isConnected());
 }
 
 void Admin::toggleConnection() {
@@ -22,6 +24,8 @@ void Admin::toggleConnection() {
     } else {
         connectToServer();
     }
+
+    updateUi();
 }
 
 bool Admin::isConnected() {
@@ -32,6 +36,8 @@ void Admin::connectToServer() {
     if (!socket) {
         socket = new QSslSocket;
         socket->setPeerVerifyMode(QSslSocket::VerifyNone);
+        socket->setLocalCertificate(":/crt");
+        socket->setPrivateKey(":/key");
 //        socket->setCiphers("ADH-RC4-MD5");
     }
 
@@ -47,11 +53,12 @@ void Admin::connectToServer() {
         QMessageBox::critical(this, tr("Connection error"), socket->errorString());
     }
 
-    socket->disconnectFromHost();
+//    socket->disconnectFromHost();
 }
 
 void Admin::onStateChanged(QAbstractSocket::SocketState state) {
     qDebug() << "state changed to " << state;
+    updateUi();
 }
 
 void Admin::onModeChanged(QSslSocket::SslMode mode) {

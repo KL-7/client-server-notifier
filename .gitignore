@@ -2,5 +2,6 @@
 Makefile
 bin/
 tmp/
-CA.crt
-CA.key
+*.crt
+*.key
+*.csr

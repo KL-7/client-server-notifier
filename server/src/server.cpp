@@ -53,12 +53,12 @@ void Server::initUi() {
 void Server::initSslConfiguration() {
     sslConfiguration = new QSslConfiguration;
 
-    QFile key(":/ca.key");
+    QFile key(":/key");
     key.open(QIODevice::ReadOnly);
     sslConfiguration->setPrivateKey(QSslKey(key.readAll(), QSsl::Rsa));
     key.close();
 
-    QFile crt(":/ca.crt");
+    QFile crt(":/crt");
     crt.open(QIODevice::ReadOnly);
     sslConfiguration->setLocalCertificate(QSslCertificate(crt.readAll(), QSsl::Pem));
     crt.close();

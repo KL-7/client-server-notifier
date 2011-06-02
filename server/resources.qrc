@@ -1,6 +1,6 @@
 <RCC>
     <qresource prefix="/">
-        <file alias="ca.key">resources/CA.key</file>
-        <file alias="ca.crt">resources/CA.crt</file>
+        <file alias="key">resources/server.key</file>
+        <file alias="crt">resources/server.crt</file>
     </qresource>
 </RCC>
