@@ -1,7 +1,7 @@
 #include <QtNetwork>
 #include <QMessageBox>
 #include <QtDebug>
-#include <Qt/QtSql>
+#include <QtSql>
 
 #include "server.h"
 #include "sendmessagethread.h"
@@ -33,7 +33,7 @@ void Server::initDB() {
     if (db.open()) {
         log(tr("DB connection established"));
     } else {
-        log(tr("Failed to open DB"), ERR);
+        log(tr("Failed to open DB (%1)").arg(db.lastError().text()), ERR);
     }
 }
 

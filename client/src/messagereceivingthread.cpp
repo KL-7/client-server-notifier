@@ -56,7 +56,7 @@ void MessageReceivingThread::readMessage() {
     QDataStream out(tcpSocket);
     if (messageClientId != clientId) {
         out << (quint8)0;
-        emit error(tr("Wrong client id %1. Message ignored.").arg(message));
+        emit error(tr("Wrong client id %1. Message ignored.").arg(messageClientId));
     } else {
         out << (quint8)1;
         emit messageReceived(message);

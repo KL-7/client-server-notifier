@@ -1,4 +1,4 @@
-#include <Qt/QtSql>
+#include <QtSql>
 #include <QVariant>
 #include "message.h"
 
