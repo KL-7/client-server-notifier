@@ -1,1 +1,18 @@
-Schema: CREATE TABLE messages(id INTEGER PRIMARY KEY AUTOINCREMENT, client_id INT, host VARCHAR(50), port INT, body TEXT, updated_at TEXT);
+Here is tiny network message notification system. System is implemented in C++ with Qt framework and QCA library.
+
+Main participants of the system are described below.
+
+* Message - a piece of data, that has to be sent to a particular client (identified with ID) listening for incoming messages on some network socket (host and port).
+
+* Admin - connects to the server and sends messages to server. Admin sends message along with ID, host and port of the client, that should receive that message.
+
+* Client - listens for incoming connection from server on a specific host and port. When client receives new message he checks whether this message is for him. For that purpose he compares his ID with the recipient ID in the message. If they differ client ignores the message. 
+
+* Server - listens for incoming admin connections. When the server receives a new message from admin this message is stored in SQLite DB for later processing. When server's delivery cycle is turned on server tries to deliver a bunch of messages to the recipients every X seconds. 
+
+Two encryption schemes are involved in the system:
+* Messages that are transfered from server to clients are encrypted with symmetric-key encryption(AES).
+* Messages that are transfered from admin to server are signed by admin and verified by server using asymmetric-key encryption (RSA).
+
+Server DB schema: 
+CREATE TABLE messages(id INTEGER PRIMARY KEY AUTOINCREMENT, client_id INT, host VARCHAR(50), port INT, body TEXT, updated_at TEXT);
